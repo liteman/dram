@@ -26,7 +26,7 @@ ingest.ts    dedup.ts             ai.ts          ai.ts              report.ts
 ### Key modules
 
 - **types.ts** — All shared interfaces (`RawItem` → `ScoredItem` → `AnalyzedItem`)
-- **sources.ts** — RSS feed source definitions with two categories: `security_training` and `ai_dev_tools`
+- **sources.ts** — Loads feed configuration from `~/.dram/sources.json` at runtime via `loadSources()`. Validates entries against the `FeedSource` shape. See `sources.example.json` for the format
 - **ingest.ts** — Custom regex-based RSS/Atom parser (no XML library). Fetches all feeds in parallel with 10s timeout per feed; individual feed failures don't break the pipeline
 - **dedup.ts** — Uses a local JSON file (`~/.dram/seen.json`) with 30-day expiry to skip already-processed URLs
 - **ai.ts** — Shells out to the `claude` CLI for scoring (Haiku, batches of 10) and analysis (Sonnet, individual items). Uses `--system-prompt` flag and stdin pipe for messages
@@ -42,5 +42,5 @@ ingest.ts    dedup.ts             ai.ts          ai.ts              report.ts
 
 ## Configuration
 
-- **Customization points:** Edit `sources.ts` for feeds, `prompts.ts` for scoring/analysis behavior, `report.ts` for display
-- **Data directory:** `~/.dram/` contains `seen.json` (dedup state) and `reports/` (HTML output)
+- **Customization points:** Edit `~/.dram/sources.json` for feeds, `prompts.ts` for scoring/analysis behavior, `report.ts` for display
+- **Data directory:** `~/.dram/` contains `sources.json` (feed config), `seen.json` (dedup state), and `reports/` (HTML output)
