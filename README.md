@@ -1,187 +1,115 @@
 # Dram
 
-AI-powered news monitoring and analysis engine that watches security certification, AI, and dev tool markets — and emails you when something needs your attention.
+AI-powered news monitoring engine that runs locally as a CLI tool. It fetches RSS feeds, scores articles for relevance using Claude Haiku, analyzes high-priority items with Claude Sonnet, and opens an HTML report in your browser.
 
 ## How It Works
 
-Every 30 minutes, Dram:
+When you run `npm start`, Dram:
 
-1. **Fetches** RSS feeds from 14+ curated sources
-2. **Deduplicates** against previously seen articles (Cloudflare KV)
+1. **Fetches** RSS feeds from your configured sources
+2. **Deduplicates** against previously seen articles (local JSON file)
 3. **Scores** each item with Claude Haiku: `ignore` / `watch` / `act_now`
 4. **Analyzes** `act_now` items with Claude Sonnet for deep intelligence
-5. **Emails** you immediately with structured analysis:
+5. **Opens** an HTML report in your browser with structured analysis:
    - What happened
    - Why it matters to you
    - What's the move
 
-## Cost Estimate
+## Prerequisites
 
-- **Cloudflare Workers**: Free tier covers this easily (100k requests/day)
-- **Claude API**: ~$5–15/month depending on volume (Haiku for scoring, Sonnet for analysis)
-- **Resend**: Free tier = 100 emails/day (more than enough)
+- Node.js 18+
+- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) installed and authenticated (`claude` command available in your terminal)
 
-**Total: ~$5–15/month**
+No API key needed — Dram shells out to the `claude` CLI, which uses your Claude Code subscription.
 
----
-
-## Setup Guide (15–20 minutes)
-
-### Prerequisites
-
-- Node.js 18+ installed
-- An Anthropic API key ([console.anthropic.com](https://console.anthropic.com))
-
-### Step 1: Create a Cloudflare Account
-
-1. Go to [dash.cloudflare.com](https://dash.cloudflare.com) and sign up (free)
-2. Install Wrangler CLI:
-   ```bash
-   npm install -g wrangler
-   ```
-3. Authenticate:
-   ```bash
-   wrangler login
-   ```
-
-### Step 2: Set Up Resend (Email)
-
-1. Go to [resend.com](https://resend.com) and create a free account
-2. Get your API key from the dashboard
-3. **For testing**: You can use `onboarding@resend.dev` as the sender — no domain setup needed
-4. **For production**: Add and verify your own domain in Resend, then update `ALERT_FROM_EMAIL` in `wrangler.toml`
-
-### Step 3: Install Dependencies
+## Setup
 
 ```bash
+git clone https://github.com/liteman/dram.git
 cd dram
 npm install
 ```
 
-### Step 4: Create the KV Namespace
+Copy the example sources file and customize it with your own feeds:
 
 ```bash
-wrangler kv namespace create SIGNAL_KV
+cp sources.example.json ~/.dram/sources.json
 ```
 
-This will output something like:
-```
-{ binding = "SIGNAL_KV", id = "abc123..." }
+Edit `~/.dram/sources.json` to add your feeds. Each source needs:
+
+```json
+{
+  "id": "unique-id",
+  "name": "Human-Readable Name",
+  "type": "rss",
+  "url": "https://example.com/feed.xml",
+  "category": "ai_dev_tools"
+}
 ```
 
-Copy the `id` value and paste it into `wrangler.toml` replacing `YOUR_KV_NAMESPACE_ID`.
+Available categories: `security_training`, `ai_dev_tools`, `crypto_rwa`
 
-### Step 5: Set Secrets
+## Usage
 
 ```bash
-wrangler secret put ANTHROPIC_API_KEY
-# Paste your Anthropic API key when prompted
-
-wrangler secret put RESEND_API_KEY
-# Paste your Resend API key when prompted
-
-wrangler secret put ALERT_EMAIL
-# Enter your email address where you want to receive alerts
+npm start
 ```
 
-### Step 6: Update Config
+Output looks like:
 
-Edit `wrangler.toml`:
-- Replace `YOUR_KV_NAMESPACE_ID` with the ID from Step 4
-- Set `ALERT_FROM_EMAIL` to `onboarding@resend.dev` (testing) or your verified domain email
-
-### Step 7: Deploy
-
-```bash
-npm run deploy
 ```
-
-That's it. The cron trigger will start running every 30 minutes automatically.
-
-### Step 8: Test It
-
-Trigger a manual run:
-```bash
-curl -X POST https://dram.<your-subdomain>.workers.dev/trigger
-```
-
-Watch the logs:
-```bash
-wrangler tail
-```
-
-You should see output like:
-```
-🔄 Dram run started at 2026-02-22T10:00:00Z
+🔄 Dram run started at 2026-02-28T10:00:00Z
 📥 Fetched 87 items from 14 sources
-🆕 87 new items after dedup
-📊 Scores: 2 act_now, 12 watch, 73 ignore
-🧠 Analyzed 2 items
-✉️ Alert email sent: "⚡ 2 Alerts — Action Required"
+🆕 42 new items after dedup
+📊 Scores: 2 act_now, 8 watch, 32 ignore
+🧠 Analyzing 2 act_now items with Sonnet...
+📄 Report written to ~/.dram/reports/dram-2026-02-28T10-00-00.html
 ✅ Dram run completed
 ```
 
----
+The HTML report opens automatically in your default browser.
 
 ## Customization
-
-### Adding/Removing Sources
-
-Edit `src/sources.ts`. Each source needs:
-- `id`: Unique string identifier
-- `name`: Human-readable name (shown in emails)
-- `url`: RSS/Atom feed URL
-- `category`: One of the defined categories
-- `type`: Always `"rss"` for now
-
-After editing, redeploy: `npm run deploy`
 
 ### Tuning the AI Scoring
 
 Edit `src/prompts.ts`. The two key prompts are:
 
-- `SCORING_SYSTEM_PROMPT`: Controls what gets through the filter. Make it stricter to reduce noise, looser to catch more signals.
-- `ANALYSIS_SYSTEM_PROMPT`: Controls the quality and format of analysis in emails.
-
-After editing, redeploy: `npm run deploy`
-
-### Changing the Schedule
-
-Edit the cron in `wrangler.toml`:
-```toml
-crons = ["*/30 * * * *"]  # Every 30 minutes
-crons = ["*/15 * * * *"]  # Every 15 minutes
-crons = ["0 * * * *"]     # Every hour
-```
+- **`SCORING_SYSTEM_PROMPT`** — Controls what gets through the filter. Make it stricter to reduce noise, looser to catch more signals.
+- **`ANALYSIS_SYSTEM_PROMPT`** — Controls the depth and format of analysis for `act_now` items.
 
 ### Adding New Categories
 
 1. Add the category type in `src/types.ts`
-2. Add sources in `src/sources.ts`
+2. Add sources to `~/.dram/sources.json`
 3. Update the scoring prompt in `src/prompts.ts` to cover the new category
-4. Add the label in `src/email.ts` `CATEGORY_LABELS`
-
----
+4. Add the display label in `src/report.ts` (`CATEGORY_LABELS`)
 
 ## Architecture
 
 ```
-src/
-├── index.ts      # Worker entry point, cron handler, HTTP routes
-├── types.ts      # TypeScript interfaces
-├── sources.ts    # Feed configuration (add/remove sources here)
-├── prompts.ts    # AI relevance profile (tune scoring here)
-├── ingest.ts     # RSS/Atom parser and fetcher
-├── dedup.ts      # KV-based deduplication
-├── ai.ts         # Claude API integration (Haiku scoring + Sonnet analysis)
-└── email.ts      # Resend email formatting and delivery
+RSS Feeds → Dedup (JSON file) → Score (Haiku) → Analyze (Sonnet) → HTML Report
+ingest.ts    dedup.ts             ai.ts          ai.ts              report.ts
 ```
 
-## Future Enhancements (v2)
+```
+run.ts              Pipeline entry point
+src/
+├── types.ts        TypeScript interfaces
+├── sources.ts      Loads feed config from ~/.dram/sources.json
+├── prompts.ts      AI relevance profile (tune scoring here)
+├── ingest.ts       RSS/Atom parser and fetcher
+├── dedup.ts        JSON file-based deduplication (30-day expiry)
+├── ai.ts           Claude CLI integration (Haiku scoring + Sonnet analysis)
+├── report.ts       HTML report builder
+└── sanitize.ts     HTML/URL sanitization for untrusted feed content
+```
 
-- Daily digest email for `watch` items (8 AM Bangkok time)
-- Crypto & RWA category with CoinGecko/DeFiLlama API sources
-- Thailand business environment category
-- Web scraping for non-RSS sources
-- Slack integration as an alternative to email
-- Dashboard UI for managing sources and viewing history
+### Data Directory
+
+All local state lives in `~/.dram/`:
+
+- `sources.json` — Your feed configuration
+- `seen.json` — Dedup state (URLs seen in the last 30 days)
+- `reports/` — Generated HTML reports
