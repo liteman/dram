@@ -1,176 +1,74 @@
-import { FeedSource } from "./types";
+import { readFileSync, existsSync } from "fs";
+import { join } from "path";
+import { homedir } from "os";
+import { FeedSource, SignalCategory } from "./types";
 
-/**
- * RSS & API sources to monitor.
- *
- * To add a new source:
- *  1. Add an entry here with a unique `id`
- *  2. If it's an API (not RSS), set type: "api" and provide a `transform`
- *     function name (handled in ingest.ts)
- *
- * To remove a source: delete or comment out the entry.
- */
-export const SOURCES: FeedSource[] = [
-  // ─── Security Certification & Training Market ───────────────────
+const SOURCES_PATH = join(homedir(), ".dram", "sources.json");
 
-  {
-    id: "sans-isc",
-    name: "SANS Internet Storm Center",
-    type: "rss",
-    url: "https://isc.sans.edu/rssfeed.xml",
-    category: "security_training",
-  },
-  {
-    id: "hackthebox-blog",
-    name: "Hack The Box Blog",
-    type: "rss",
-    url: "https://www.hackthebox.com/rss/blog/all",
-    category: "security_training",
-  },
-  {
-    id: "reddit-comptia",
-    name: "r/CompTIA",
-    type: "rss",
-    url: "https://www.reddit.com/r/CompTIA/.rss",
-    category: "security_training",
-  },
-  {
-    id: "blackhills-infosec",
-    name: "Black Hills InfoSec",
-    type: "rss",
-    url: "https://www.blackhillsinfosec.com/feed/",
-    category: "security_training",
-  },
-  {
-    id: "helpnetsecurity",
-    name: "Help Net Security",
-    type: "rss",
-    url: "https://www.helpnetsecurity.com/feed/",
-    category: "security_training",
-  },
-  {
-    id: "sans-newsbites",
-    name: "SANS NewsBites",
-    type: "rss",
-    url: "https://www.sans.org/newsletters/newsbites/rss",
-    category: "security_training",
-  },
-  {
-    id: "darkreading",
-    name: "Dark Reading",
-    type: "rss",
-    url: "https://www.darkreading.com/rss.xml",
-    category: "security_training",
-  },
-  {
-    id: "krebs-security",
-    name: "Krebs on Security",
-    type: "rss",
-    url: "https://krebsonsecurity.com/feed/",
-    category: "security_training",
-  },
-  {
-    id: "schneier",
-    name: "Schneier on Security",
-    type: "rss",
-    url: "https://www.schneier.com/feed/atom/",
-    category: "security_training",
-  },
-  {
-    id: "thehackernews",
-    name: "The Hacker News",
-    type: "rss",
-    url: "https://feeds.feedburner.com/TheHackersNews",
-    category: "security_training",
-  },
+const VALID_TYPES = new Set(["rss", "api", "web"]);
+const VALID_CATEGORIES = new Set<string>([
+  "security_training",
+  "ai_dev_tools",
+  "crypto_rwa",
+]);
 
-  // ─── AI & Developer Tools Ecosystem ─────────────────────────────
+function validateSource(obj: unknown, index: number): FeedSource {
+  if (typeof obj !== "object" || obj === null) {
+    throw new Error(`sources[${index}]: must be an object`);
+  }
+  const rec = obj as Record<string, unknown>;
 
-  {
-    id: "anthropic-news",
-    name: "Anthropic News",
-    type: "web",
-    url: "https://www.anthropic.com/news",
-    category: "ai_dev_tools",
-  },
-  {
-    id: "openai-blog",
-    name: "OpenAI Blog",
-    type: "rss",
-    url: "https://openai.com/blog/rss.xml",
-    category: "ai_dev_tools",
-  },
-  {
-    id: "techcrunch-ai",
-    name: "TechCrunch AI",
-    type: "rss",
-    url: "https://techcrunch.com/category/artificial-intelligence/feed/",
-    category: "ai_dev_tools",
-  },
-  {
-    id: "theverge-ai",
-    name: "The Verge AI",
-    type: "rss",
-    url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
-    category: "ai_dev_tools",
-  },
-  {
-    id: "hn-frontpage",
-    name: "Hacker News Front Page",
-    type: "rss",
-    url: "https://hnrss.org/frontpage",
-    category: "ai_dev_tools",
-  },
-  {
-    id: "github-blog",
-    name: "GitHub Blog",
-    type: "rss",
-    url: "https://github.blog/feed/",
-    category: "ai_dev_tools",
-  },
-  {
-    id: "apple-developer-news",
-    name: "Apple Developer News",
-    type: "rss",
-    url: "https://developer.apple.com/news/rss/news.rss",
-    category: "ai_dev_tools",
-  },
+  for (const field of ["id", "name", "type", "url", "category"]) {
+    if (typeof rec[field] !== "string" || (rec[field] as string).length === 0) {
+      throw new Error(`sources[${index}]: "${field}" must be a non-empty string`);
+    }
+  }
 
-  // ─── Crypto & RWA Tokenization ────────────────────────────────
+  if (!VALID_TYPES.has(rec.type as string)) {
+    throw new Error(
+      `sources[${index}]: "type" must be one of: ${[...VALID_TYPES].join(", ")}`
+    );
+  }
 
-  {
-    id: "coindesk",
-    name: "CoinDesk",
-    type: "rss",
-    url: "https://www.coindesk.com/arc/outboundfeeds/rss/",
-    category: "crypto_rwa",
-  },
-  {
-    id: "cointelegraph",
-    name: "CoinTelegraph",
-    type: "rss",
-    url: "https://cointelegraph.com/rss",
-    category: "crypto_rwa",
-  },
-  {
-    id: "theblock",
-    name: "The Block",
-    type: "rss",
-    url: "https://www.theblock.co/rss.xml",
-    category: "crypto_rwa",
-  },
-  {
-    id: "bitcoin-magazine",
-    name: "Bitcoin Magazine",
-    type: "rss",
-    url: "https://bitcoinmagazine.com/feed",
-    category: "crypto_rwa",
-  },
-  {
-    id: "dlnews",
-    name: "DL News",
-    type: "rss",
-    url: "https://www.dlnews.com/arc/outboundfeeds/rss/",
-    category: "crypto_rwa",
-  },
-];
+  if (!VALID_CATEGORIES.has(rec.category as string)) {
+    throw new Error(
+      `sources[${index}]: "category" must be one of: ${[...VALID_CATEGORIES].join(", ")}`
+    );
+  }
+
+  return {
+    id: rec.id as string,
+    name: rec.name as string,
+    type: rec.type as FeedSource["type"],
+    url: rec.url as string,
+    category: rec.category as SignalCategory,
+  };
+}
+
+export function loadSources(): FeedSource[] {
+  if (!existsSync(SOURCES_PATH)) {
+    console.error(`\n❌ No sources config found at ${SOURCES_PATH}\n`);
+    console.error(`To get started, copy the example file:\n`);
+    console.error(`  cp sources.example.json ~/.dram/sources.json\n`);
+    console.error(`Then edit ~/.dram/sources.json with your own feeds.\n`);
+    process.exit(1);
+  }
+
+  const raw = readFileSync(SOURCES_PATH, "utf-8");
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error(`Failed to parse ${SOURCES_PATH}: invalid JSON`);
+  }
+
+  if (!Array.isArray(parsed)) {
+    throw new Error(`${SOURCES_PATH} must contain a JSON array of feed sources`);
+  }
+
+  if (parsed.length === 0) {
+    throw new Error(`${SOURCES_PATH} is empty — add at least one feed source`);
+  }
+
+  return parsed.map((item, i) => validateSource(item, i));
+}

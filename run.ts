@@ -1,4 +1,4 @@
-import { SOURCES } from "./src/sources";
+import { loadSources } from "./src/sources";
 import { fetchAllFeeds } from "./src/ingest";
 import { dedup, markSeen } from "./src/dedup";
 import { scoreItems, analyzeItem } from "./src/ai";
@@ -6,11 +6,12 @@ import { writeReport } from "./src/report";
 import { AnalyzedItem } from "./src/types";
 
 async function main() {
-  console.log(`🔄 Signal Monitor run started at ${new Date().toISOString()}`);
+  console.log(`🔄 Dram run started at ${new Date().toISOString()}`);
 
   // ── Step 1: Fetch all feeds ──
-  const rawItems = await fetchAllFeeds(SOURCES);
-  console.log(`📥 Fetched ${rawItems.length} items from ${SOURCES.length} sources`);
+  const sources = loadSources();
+  const rawItems = await fetchAllFeeds(sources);
+  console.log(`📥 Fetched ${rawItems.length} items from ${sources.length} sources`);
 
   if (rawItems.length === 0) {
     console.log("No items fetched, ending run.");
@@ -60,7 +61,7 @@ async function main() {
     console.log(`📄 Report written to ${filepath}`);
   }
 
-  console.log(`✅ Signal Monitor run completed`);
+  console.log(`✅ Dram run completed`);
 }
 
 main().catch((err) => {

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "hn-frontpage",
+    "name": "Hacker News Front Page",
+    "type": "rss",
+    "url": "https://hnrss.org/frontpage",
+    "category": "ai_dev_tools"
+  },
+  {
+    "id": "github-blog",
+    "name": "GitHub Blog",
+    "type": "rss",
+    "url": "https://github.blog/feed/",
+    "category": "ai_dev_tools"
+  }
+]
