@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Signal Monitor is an AI-powered news monitoring engine that runs locally as a CLI tool. It fetches RSS feeds, scores articles for relevance using Claude Haiku (via the `claude` CLI), analyzes high-priority items with Claude Sonnet, and writes an HTML report that opens in the browser.
+Dram is an AI-powered news monitoring engine that runs locally as a CLI tool. It fetches RSS feeds, scores articles for relevance using Claude Haiku (via the `claude` CLI), analyzes high-priority items with Claude Sonnet, and writes an HTML report that opens in the browser.
 
 ## Commands
 
@@ -28,10 +28,10 @@ ingest.ts    dedup.ts             ai.ts          ai.ts              report.ts
 - **types.ts** — All shared interfaces (`RawItem` → `ScoredItem` → `AnalyzedItem`)
 - **sources.ts** — RSS feed source definitions with two categories: `security_training` and `ai_dev_tools`
 - **ingest.ts** — Custom regex-based RSS/Atom parser (no XML library). Fetches all feeds in parallel with 10s timeout per feed; individual feed failures don't break the pipeline
-- **dedup.ts** — Uses a local JSON file (`~/.signal-monitor/seen.json`) with 30-day expiry to skip already-processed URLs
+- **dedup.ts** — Uses a local JSON file (`~/.dram/seen.json`) with 30-day expiry to skip already-processed URLs
 - **ai.ts** — Shells out to the `claude` CLI for scoring (Haiku, batches of 10) and analysis (Sonnet, individual items). Uses `--system-prompt` flag and stdin pipe for messages
 - **prompts.ts** — System prompts that define the relevance scoring profile and analysis format
-- **report.ts** — Builds and writes an HTML report to `~/.signal-monitor/reports/`, opens in default browser
+- **report.ts** — Builds and writes an HTML report to `~/.dram/reports/`, opens in default browser
 
 ## Important Patterns
 
@@ -43,4 +43,4 @@ ingest.ts    dedup.ts             ai.ts          ai.ts              report.ts
 ## Configuration
 
 - **Customization points:** Edit `sources.ts` for feeds, `prompts.ts` for scoring/analysis behavior, `report.ts` for display
-- **Data directory:** `~/.signal-monitor/` contains `seen.json` (dedup state) and `reports/` (HTML output)
+- **Data directory:** `~/.dram/` contains `seen.json` (dedup state) and `reports/` (HTML output)

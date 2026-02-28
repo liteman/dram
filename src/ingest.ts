@@ -146,7 +146,7 @@ export async function fetchFeed(source: FeedSource): Promise<RawItem[]> {
     const isWeb = source.type === "web";
     const response = await fetch(source.url, {
       headers: {
-        "User-Agent": "SignalMonitor/1.0 (news aggregator)",
+        "User-Agent": "Dram/1.0 (news aggregator)",
         Accept: isWeb
           ? "text/html"
           : "application/rss+xml, application/atom+xml, application/xml, text/xml",

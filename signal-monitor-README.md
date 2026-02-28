@@ -1,10 +1,10 @@
-# Signal Monitor
+# Dram
 
 AI-powered news monitoring and analysis engine that watches security certification, AI, and dev tool markets — and emails you when something needs your attention.
 
 ## How It Works
 
-Every 30 minutes, Signal Monitor:
+Every 30 minutes, Dram:
 
 1. **Fetches** RSS feeds from 14+ curated sources
 2. **Deduplicates** against previously seen articles (Cloudflare KV)
@@ -54,7 +54,7 @@ Every 30 minutes, Signal Monitor:
 ### Step 3: Install Dependencies
 
 ```bash
-cd signal-monitor
+cd dram
 npm install
 ```
 
@@ -102,7 +102,7 @@ That's it. The cron trigger will start running every 30 minutes automatically.
 
 Trigger a manual run:
 ```bash
-curl -X POST https://signal-monitor.<your-subdomain>.workers.dev/trigger
+curl -X POST https://dram.<your-subdomain>.workers.dev/trigger
 ```
 
 Watch the logs:
@@ -112,13 +112,13 @@ wrangler tail
 
 You should see output like:
 ```
-🔄 Signal Monitor run started at 2026-02-22T10:00:00Z
+🔄 Dram run started at 2026-02-22T10:00:00Z
 📥 Fetched 87 items from 14 sources
 🆕 87 new items after dedup
 📊 Scores: 2 act_now, 12 watch, 73 ignore
 🧠 Analyzed 2 items
-✉️ Alert email sent: "⚡ 2 Signal Alerts — Action Required"
-✅ Signal Monitor run completed
+✉️ Alert email sent: "⚡ 2 Alerts — Action Required"
+✅ Dram run completed
 ```
 
 ---

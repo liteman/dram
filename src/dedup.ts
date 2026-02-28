@@ -1,9 +1,16 @@
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, renameSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { RawItem } from "./types";
 
-const DATA_DIR = join(homedir(), ".signal-monitor");
+const DATA_DIR = join(homedir(), ".dram");
+const LEGACY_DATA_DIR = join(homedir(), ".signal-monitor");
+
+// Auto-migrate from legacy data directory
+if (existsSync(LEGACY_DATA_DIR) && !existsSync(DATA_DIR)) {
+  renameSync(LEGACY_DATA_DIR, DATA_DIR);
+  console.log(`📦 Migrated data from ~/.signal-monitor to ~/.dram`);
+}
 const SEEN_FILE = join(DATA_DIR, "seen.json");
 const TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 

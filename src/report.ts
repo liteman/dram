@@ -5,7 +5,7 @@ import { execSync } from "node:child_process";
 import { AnalyzedItem, ScoredItem } from "./types";
 import { escapeHtml, sanitizeUrl } from "./sanitize";
 
-const REPORTS_DIR = join(homedir(), ".signal-monitor", "reports");
+const REPORTS_DIR = join(homedir(), ".dram", "reports");
 
 const CATEGORY_LABELS: Record<string, string> = {
   security_training: "🔒 Security & Training",
@@ -62,7 +62,7 @@ function buildWatchCard(item: ScoredItem): string {
 }
 
 /**
- * Build and write an HTML report to ~/.signal-monitor/reports/.
+ * Build and write an HTML report to ~/.dram/reports/.
  * Opens the file in the default browser.
  */
 export function writeReport(
@@ -85,11 +85,11 @@ export function writeReport(
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Signal Monitor Report — ${now.toLocaleDateString()}</title>
+  <title>Dram Report — ${now.toLocaleDateString()}</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 700px; margin: 0 auto; padding: 20px; background: #ffffff;">
   <div style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #eee;">
-    <h1 style="font-size: 20px; color: #1a1a2e; margin: 0;">⚡ Signal Monitor</h1>
+    <h1 style="font-size: 20px; color: #1a1a2e; margin: 0;">🥃 Dram</h1>
     <p style="font-size: 13px; color: #999; margin: 4px 0 0 0;">${now.toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" })}</p>
   </div>
 
@@ -106,7 +106,7 @@ export function writeReport(
   </div>` : ""}
 
   <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee; font-size: 12px; color: #999;">
-    Signal Monitor — Your AI-powered business intelligence feed<br>
+    Dram — Your AI-powered business intelligence feed<br>
     ${totalItems} item${totalItems !== 1 ? "s" : ""} from ${sources.size} source${sources.size !== 1 ? "s" : ""}
   </div>
 </body>
